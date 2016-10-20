@@ -1,0 +1,31 @@
+#/bin/bash
+
+set -xe
+
+apt-get update
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates
+
+apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+
+echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list
+
+apt-get update
+
+apt-get install -y \
+    docker-engine
+
+mkdir -p /go/src/github.com/toddproject/
+cd /go/src/github.com/toddproject/
+git clone https://github.com/toddproject/todd
+cd todd/
+git checkout ${application_version}
+make
+strip /go/bin/todd*
+mv /go/bin/todd* /tmp/resources
+
+cd /tmp/resources
+docker build -t todd:${application_version} --rm .
+
+rm /tmp/resources/todd*
